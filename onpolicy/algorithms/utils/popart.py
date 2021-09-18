@@ -61,13 +61,13 @@ class PopArt(torch.nn.Module):
         self.mean_sq.mul_(self.beta).add_(batch_sq_mean * (1.0 - self.beta))
         self.debiasing_term.mul_(self.beta).add_(1.0 * (1.0 - self.beta))
 
-        self.stddev = (self.mean_sq - self.mean ** 2).sqrt().clamp(min=1e-4)
+        self.stddev = nn.parameter.Parameter((self.mean_sq - self.mean ** 2).sqrt().clamp(min=1e-4))
         
         new_mean, new_var = self.debiased_mean_var()
         new_stddev = torch.sqrt(new_var)
         
-        self.weight = self.weight * old_stddev / new_stddev
-        self.bias = (old_stddev * self.bias + old_mean - new_mean) / new_stddev
+        self.weight = nn.parameter.Parameter(self.weight * old_stddev / new_stddev)
+        self.bias = nn.parameter.Parameter((old_stddev * self.bias + old_mean - new_mean) / new_stddev)
 
     def debiased_mean_var(self):
         debiased_mean = self.mean / self.debiasing_term.clamp(min=self.epsilon)
@@ -78,7 +78,7 @@ class PopArt(torch.nn.Module):
     def normalize(self, input_vector):
         if type(input_vector) == np.ndarray:
             input_vector = torch.from_numpy(input_vector)
-        input_vector = input_vector.to(**self.tpdv)
+        input_vector = input_vector.to(**self.tpdv)·
 
         mean, var = self.debiased_mean_var()
         out = (input_vector - mean[(None,) * self.norm_axes]) / torch.sqrt(var)[(None,) * self.norm_axes]
