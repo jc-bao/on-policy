@@ -53,17 +53,14 @@ class Runner(object):
             if not os.path.exists(self.gif_dir):
                 os.makedirs(self.gif_dir)
         else:
-            if self.use_wandb:
-                self.save_dir = str(wandb.run.dir)
-            else:
-                self.run_dir = config["run_dir"]
-                self.log_dir = str(self.run_dir / 'logs')
-                if not os.path.exists(self.log_dir):
-                    os.makedirs(self.log_dir)
-                self.writter = SummaryWriter(self.log_dir)
-                self.save_dir = str(self.run_dir / 'models')
-                if not os.path.exists(self.save_dir):
-                    os.makedirs(self.save_dir)
+            self.run_dir = config["run_dir"]
+            self.log_dir = str(self.run_dir / 'logs')
+            if not os.path.exists(self.log_dir):
+                os.makedirs(self.log_dir)
+            self.writter = SummaryWriter(self.log_dir)
+            self.save_dir = str(self.run_dir / 'models')
+            if not os.path.exists(self.save_dir):
+                os.makedirs(self.save_dir)
 
 
         from onpolicy.algorithms.r_mappo.r_mappo import R_MAPPO as TrainAlgo
@@ -148,10 +145,7 @@ class Runner(object):
         for agent_id in range(self.num_agents):
             for k, v in train_infos[agent_id].items():
                 agent_k = "agent%i/" % agent_id + k
-                if self.use_wandb:
-                    wandb.log({agent_k: v}, step=total_num_steps)
-                else:
-                    self.writter.add_scalars(agent_k, {agent_k: v}, total_num_steps)
+                self.writter.add_scalars(agent_k, {agent_k: v}, total_num_steps)
 
     def log_env(self, env_infos, total_num_steps):
         for k, v in env_infos.items():
